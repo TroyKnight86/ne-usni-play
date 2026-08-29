@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>НЕ УСНИ</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  /* ===== база ===== */
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; background:#0a0a0d; color:#c9c4b8;
+    font-family:'Courier New', monospace; overflow:hidden; }
+  #game { height:100%; margin:0 auto; display:flex;
+    flex-direction:column; justify-content:center; align-items:center; }
+
+  /* ===== сцена: ЖЁСТКИЙ аспект кадра (11:6) — зоны всегда совпадают ===== */
+  #scene { position:relative; border:1px solid #222;
+    width:min(1100px, 100vw, calc((100vh - 205px) * 1.8333));
+    aspect-ratio: 11 / 6;
+    overflow:hidden; cursor:crosshair;
+    /* явь: лёгкая усталость цвета — не мыло */
+    filter: saturate(0.88) contrast(0.97) brightness(0.98); }
+  #scene.dream { filter:none; } /* сон = полная резкость и цвет (инверсия канона) */
+  .backdrop { position:absolute; inset:0; }
+  .backdrop-img { position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; }
+
+  /* фон-кадр и его светящийся дубль: ОДИНАКОВАЯ геометрия гарантирована
+     (аспект сцены = аспект кадра, поэтому cover = точное совпадение без кропа) */
+  .bg-cover { position:absolute; inset:0; background-size:cover;
+    background-position:center; }
+  .glow-img { position:absolute; inset:0; background-size:cover;
+    background-position:center; opacity:0;
+    transition:opacity .22s; pointer-events:none; z-index:2;
+    filter: brightness(1.55) saturate(1.15)
+            drop-shadow(0 0 10px rgba(255,235,190,.55)); }
+  .hot-glow { position:absolute; cursor:pointer; z-index:4; }
+  .hot-glow .tag { display:none; position:absolute; bottom:100%; left:0;
+    background:#000c; padding:2px 6px; font-size:12px; white-space:nowrap;
+    color:#a8a290; z-index:5; }
+  .hot-glow:hover .tag { display:block; }
+
+  /* клик-зона */
+  .hot { position:absolute; cursor:pointer; }
+  .hot:hover { outline:1px dashed rgba(200,190,160,.55); outline-offset:2px; }
+  .hot .tag { display:none; position:absolute; bottom:100%; left:0;
+    background:#000c; padding:2px 6px; font-size:12px; white-space:nowrap;
+    color:#a8a290; z-index:3; }
+  .hot:hover .tag { display:block; }
+
+  /* модальный щит: во время диалога сцена не кликается */
+  #shield { position:absolute; inset:0; display:none; z-index:5; }
+  #shield.on { display:block; }
+
+  /* заглушки-объекты (пока вместо арта — всратые CSS-фигуры, канон) */
+  .prop { position:absolute; background:#1c1c22; border:1px solid #2e2e36; }
+
+  /* ===== HUD: единственная строка ===== */
+  #hud { position:absolute; top:14px; left:0; right:0; text-align:center;
+    font-size:15px; letter-spacing:2px; color:#8d8574; opacity:0;
+    transition:opacity 1.2s; pointer-events:none; text-transform:uppercase;
+    z-index:6; }
+  #hud.show { opacity:1; }
+
+  /* ===== нижняя панель: реплики (пиксель-RPG рамка) ===== */
+  #panel { height:176px; border:4px solid #55503f;
+    box-shadow: inset 0 0 0 2px #0a0a0d, inset 0 0 0 4px #35322a,
+                0 0 0 2px #0a0a0d;
+    padding:14px 20px; background:#12121b; display:flex; flex-direction:column;
+    position:relative; margin-top:6px;
+    width:min(1100px, 100vw, calc((100vh - 205px) * 1.8333));
+    font-family:'Press Start 2P', 'Courier New', monospace; }
+  #panel.talk { cursor:pointer; background:#14141e; }
+  #speaker { font-size:10px; color:#d8c080; margin-bottom:8px;
+    letter-spacing:2px; }
+  #text { flex:1; font-size:13px; line-height:1.9; white-space:pre-wrap;
+    overflow:hidden; color:#e0d8c0; }
+  #text .narr { color:#98917e; font-style:normal; }
+  #choices { display:flex; gap:14px; margin-top:8px; flex-wrap:wrap; }
+  .choice { border:3px solid #3a3a44; padding:8px 14px; cursor:pointer;
+    font-size:11px; color:#e0d8c0; background:#191922; user-select:none;
+    box-shadow: inset 0 0 0 1px #0a0a0d; }
+  .choice:hover { background:#232330; border-color:#8d8560; }
+
+  /* индикатор «дальше» и кнопка «пропустить» */
+  #more { position:absolute; right:16px; bottom:10px; color:#6e6858;
+    font-size:14px; animation:blink 1.1s infinite; display:none;
+    user-select:none; }
+  @keyframes blink { 50% { opacity:.15; } }
+  #skip { position:absolute; right:14px; top:8px; border:2px solid #33333d;
+    color:#8a8474; font-size:9px; padding:5px 10px; cursor:pointer;
+    display:none; user-select:none; letter-spacing:1px; }
+  #skip:hover { background:#1e1e26; }
+
+  /* переходы между экранами: заметные плашки */
+  .exit { position:absolute; display:flex; align-items:center;
+    justify-content:center; color:#e6dcc0; font-size:26px; cursor:pointer;
+    opacity:.85; flex-direction:column; background:rgba(10,10,14,.5);
+    border:1px solid rgba(230,220,192,.35); border-radius:6px;
+    text-shadow:0 0 6px #000; padding:2px 6px; z-index:4; }
+  .exit:hover { opacity:1; background:rgba(20,20,26,.75);
+    border-color:rgba(230,220,192,.7); }
+  .exit small { font-size:11px; letter-spacing:1px; color:#e6dcc0; }
+
+  /* звонящий телефон: вибрация + свечение */
+  @keyframes ringshake {
+    0%,100% { transform:none; }
+    25% { transform:translate(-1px,1px) rotate(-1.5deg); }
+    75% { transform:translate(1px,-1px) rotate(1.5deg); }
+  }
+  .ringing { animation:ringshake .16s infinite;
+    box-shadow:0 0 10px rgba(141,133,116,.7) !important; }
+
+  /* колонка: полоски эквалайзера */
+  .eq { position:absolute; display:flex; gap:2px; align-items:flex-end; }
+  .eq i { width:3px; background:#6e6858; }
+
+  /* аквариум: рыбки, дыхание воды, пузырьки */
+  .fish { position:absolute; border-radius:60% 40% 40% 60%; background:#3a3f38;
+    transition: left 2.6s ease-in-out, top 2.6s ease-in-out; z-index:3; }
+  .aqua-glow { position:absolute; pointer-events:none; z-index:2;
+    background:radial-gradient(ellipse at 50% 60%, rgba(255,220,150,.22), transparent 70%);
+    animation:aquaPulse 5s ease-in-out infinite; }
+  @keyframes aquaPulse { 50% { opacity:.45; } }
+  .bubble { position:absolute; width:2px; height:2px; border-radius:50%;
+    background:rgba(255,240,200,.6); z-index:3; animation:bubbleUp 3.2s linear forwards; }
+  @keyframes bubbleUp { to { transform:translateY(-46px); opacity:0; } }
+
+  /* затемнение-переход */
+  #fade { position:fixed; inset:0; background:#000; opacity:0;
+    pointer-events:none; transition:opacity .8s; z-index:9; }
+  #fade.on { opacity:1; pointer-events:all; }
+
+  /* титульный/межэкранный текст */
+  #card { position:fixed; inset:0; background:#000; display:flex;
+    align-items:center; justify-content:center; z-index:10; text-align:center;
+    padding:40px; font-size:14px; line-height:2.1; letter-spacing:1px;
+    white-space:pre-wrap; font-family:'Press Start 2P', 'Courier New', monospace;
+    color:#e0d8c0; }
+  #card.hidden { display:none; }
+  #card small { display:block; margin-top:30px; font-size:10px; color:#6e6858; }
+
+  /* HUD и ярлыки — тоже пиксель */
+  #hud { font-family:'Press Start 2P', 'Courier New', monospace; }
+  .hot .tag, .hot-glow .tag { font-family:'Press Start 2P', monospace;
+    font-size:9px; padding:4px 7px; }
+  .exit { font-family:'Press Start 2P', monospace; }
+  .exit small { font-size:8px; }
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="scene"><div id="hud"></div><div id="shield"></div></div>
+  <div id="panel">
+    <div id="skip">ПРОПУСТИТЬ ▶</div>
+    <div id="speaker"></div>
+    <div id="text"></div>
+    <div id="choices"></div>
+    <div id="more">▼</div>
+  </div>
+</div>
+<div id="fade"></div>
+<div id="card" onclick="cardNext()">НЕ УСНИ
+<small>кирпич №2 — квартира, день первый
+клик — начать</small></div>
+
+<script src="js/game.js"></script>
+</body>
+</html>
