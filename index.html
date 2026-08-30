@@ -133,6 +133,12 @@
     background:rgba(255,240,200,.6); z-index:3; animation:bubbleUp 3.2s linear forwards; }
   @keyframes bubbleUp { to { transform:translateY(-46px); opacity:0; } }
 
+  /* дымок над кофе: маячок «я интерактивный» (дети не находили кружку) */
+  .steam { position:absolute; width:3px; height:3px; border-radius:50%;
+    background:rgba(235,228,210,.5); z-index:3;
+    animation:steamUp 2.6s ease-out forwards; }
+  @keyframes steamUp { to { transform:translate(-7px,-32px) scale(1.8); opacity:0; } }
+
   /* затемнение-переход */
   #fade { position:fixed; inset:0; background:#000; opacity:0;
     pointer-events:none; transition:opacity .8s; z-index:9; }

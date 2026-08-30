@@ -1331,6 +1331,16 @@ SCENES.kitchen = { build() {
       t:'Стол на четверых. В учебное время Вера завтракает с детьми в шесть — перед сменой.\nСейчас каникулы: дети едят когда-нибудь. Ты — тоже, в принципе, когда-нибудь.\nВ полном составе этот стол работает... по воскресеньям? Когда-нибудь. Хорошее слово,\nна нём тут полдома держится.' }]);
   });
 
+  // дымок над кружкой — пока кофе не выпит (дети её не находили)
+  let steamTimer = null;
+  if (S.time === 'morning' && !S.flags.coffee) {
+    steamTimer = tick(() => {
+      const p = el('div', 'steam', {
+        left: (33.8 + Math.random() * 1.4) + '%', top: '47.5%' });
+      setTimeout(() => p.remove(), 2700);
+    }, 700);
+  }
+
   glowHot({ left:'33.5%', top:'48.8%', width:'2.2%', height:'5.5%' },
     'polygon(33.5% 48.8%, 35.7% 48.8%, 35.7% 54.3%, 33.5% 54.3%)', 'кофе', () => {
     if (S.time === 'evening') {
@@ -1338,8 +1348,24 @@ SCENES.kitchen = { build() {
       dialog('coffee_n', [{ sp:'МАРК', t:'Кофе в полночь? Даже я не настолько.' }]);
       return;
     }
-    S.flags.coffee = true;
-    dialog('coffee', [{ narr:true, t:'Кофе — быстро, стоя, как на вокзале.' }]);
+    if (!S.flags.coffee) {
+      S.flags.coffee = true;
+      if (steamTimer) { clearInterval(steamTimer); steamTimer = null; } // дымок выпит вместе с кофе
+      dialog('coffee', [{ narr:true, t:'Кофе — быстро, стоя, как на вокзале.' }]);
+      return;
+    }
+    // цепочка пустой кружки (тексты Антона)
+    S.flags.mugClicks = (S.flags.mugClicks || 0) + 1;
+    if (S.flags.mugClicks === 1) {
+      dialog('mug2', [{ sp:'МАРК',
+        t:'Пустая кружка. Погадать на кофейной гуще?\nИли всё же на работу уже пора идти. Фигнёй занимаюсь, ей-богу.' }]);
+    } else if (S.flags.mugClicks === 2) {
+      dialog('mug3', [{ sp:'МАРК',
+        t:'Пусто там, пусто. Как было в моей голове до этого нектара Богов.' }]);
+    } else {
+      dialog('mug4', [{ sp:'МАРК',
+        t:'Так, соберись уже. Работа сама себя не сделает.' }]);
+    }
   });
 
   glowHot({ left:'39.9%', top:'49.8%', width:'3.3%', height:'4.8%' },
