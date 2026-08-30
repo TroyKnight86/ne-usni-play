@@ -69,6 +69,10 @@ function say(sp, t, narr) {
   const el = document.getElementById('text');
   if (narr) el.innerHTML = '<span class="narr">' + t + '</span>';
   else el.textContent = t;
+  // лицо Марка: когда говорит/думает ОН; нарратор и другие — без лица
+  const isMark = !narr && sp && sp.indexOf('МАРК') !== -1;
+  document.getElementById('avatar').style.display = isMark ? 'block' : 'none';
+  document.getElementById('panel').classList.toggle('with-ava', isMark);
 }
 function dialog(id, lines, after) {
   D.lines = lines; D.idx = 0; D.after = after || null; D.id = id;
