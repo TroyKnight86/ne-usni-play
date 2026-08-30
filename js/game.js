@@ -226,6 +226,7 @@ window.addEventListener('keydown', (e) => {
              y: Math.max(0, Math.min(100, (e.clientY - r.top) / r.height * 100)) };
   };
   sc.addEventListener('mousedown', (e) => {
+    if (zAdj) return; // фаза подгонки: рамку не начинать — событие должно дойти до ручки
     if (!zEdit) return;
     e.preventDefault(); e.stopPropagation();
     zStart = pct(e);
@@ -303,6 +304,9 @@ window.addEventListener('keydown', (e) => {
     zAdj.pts[zAdj.dragIdx] = { x: p.x, y: p.y };
     renderAdj();
   }, true);
+  window.addEventListener('mouseup', () => { // мышь отпущена вне сцены — угол не залипает
+    if (zAdj) zAdj.dragIdx = -1;
+  });
   sc.addEventListener('mouseup', (e) => {
     if (zAdj) { zAdj.dragIdx = -1; return; }
     if (!zEdit || !zStart) return;
@@ -676,10 +680,10 @@ SCENES.corridor = { build() {
   const cbg = S.time === 'evening' ? 'assets/corridor_night.png' : 'assets/corridor_px.png';
   setBg(cbg);
   glowSetup(cbg);
-  aquarium(21.5, 47.5, 12.5, 15.5); // рыбы в воде (зона Антона), не в воздухе
+  aquarium(34.6, 50.6, 8.3, 8.5); // рыбы в воде (зона Антона по корню v7), не в воздухе
 
-  glowHot({ left:'2.5%', top:'52.6%', width:'18.6%', height:'25.0%' },
-    'polygon(2.5% 52.6%, 21.1% 52.6%, 21.1% 77.6%, 2.5% 77.6%)', 'рабочее место', () => gated('corridor', () =>
+  glowHot({ left:'11.8%', top:'46.1%', width:'15.2%', height:'10.0%' },
+    'polygon(11.8% 46.1%, 27.0% 46.1%, 27.0% 56.1%, 11.8% 56.1%)', 'рабочее место', () => gated('corridor', () =>
     dialog('desk', [
       { narr:true, t:'Стол в углу коридора, впритык к стене детской: сорок сантиметров и гипсокартон\nмежду тобой и спящими детьми. Ближе всех в доме. И спиной ко всем — лицом к выходу.\nДомочадцы ходят сзади: в кухню, в спальню. Могут пройти и не увидеть тебя. Ты — их.' },
       { narr:true, t:'Четыре розетки — ты заложил их ещё в проекте, сам чертил, до последнего миллиметра.\nСначала спланировал, куда воткнёшь технику. Потом — всё остальное.' },
@@ -690,8 +694,8 @@ SCENES.corridor = { build() {
       { narr:true, t:'Аквариум рядом булькнул. Он своего переезда уже дождался —\nединственный в этой семье, между прочим.' },
     ])));
 
-  glowHot({ left:'21.0%', top:'46.4%', width:'13.7%', height:'17.5%' },
-    'polygon(21.0% 46.4%, 34.7% 46.4%, 34.7% 63.9%, 21.0% 63.9%)', 'аквариум', () => gated('corridor', () => {
+  glowHot({ left:'34.2%', top:'50.1%', width:'9.1%', height:'9.7%' },
+    'polygon(34.2% 50.1%, 43.3% 50.1%, 43.3% 59.8%, 34.2% 59.8%)', 'аквариум', () => gated('corridor', () => {
     if (S.time === 'evening' && !S.flags.fishFed) {
       S.flags.fishFed = true; S.log.push('вечер: покормил рыб');
       dialog('fish_feed', [
@@ -711,8 +715,8 @@ SCENES.corridor = { build() {
       { narr:true, t:'Карта висит. Мир ждёт. Всё в этом доме умеет ждать.' },
     ])));
 
-  glowHot({ left:'44.1%', top:'43.4%', width:'22.2%', height:'42.0%' },
-    'polygon(44.1% 43.4%, 66.3% 43.4%, 66.3% 85.4%, 44.1% 85.4%)', 'стеллаж с гитарой', () => gated('corridor', () =>
+  glowHot({ left:'44.6%', top:'40.6%', width:'5.1%', height:'35.5%' },
+    'polygon(44.6% 40.6%, 49.7% 40.6%, 49.7% 76.1%, 44.6% 76.1%)', 'стеллаж с гитарой', () => gated('corridor', () =>
     dialog('guitar_shelf', [
       { narr:true, t:'Белый стеллаж: настолки, сувениры — и гитара. Классика, честная, с нейлоном.' },
       { sp:'МАРК', t:'Три аккорда я ещё помню. Четвёртый — под вопросом.' },
