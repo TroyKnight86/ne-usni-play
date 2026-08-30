@@ -241,27 +241,82 @@ window.addEventListener('keydown', (e) => {
     const w = Math.abs(p.x - zStart.x), h = Math.abs(p.y - zStart.y);
     Object.assign(zBox.style, { left:l+'%', top:t+'%', width:w+'%', height:h+'%' });
   }, true);
-  sc.addEventListener('mouseup', (e) => {
-    if (!zEdit || !zStart) return;
-    e.preventDefault(); e.stopPropagation();
-    const p = pct(e);
-    const l = Math.min(zStart.x, p.x).toFixed(1), t = Math.min(zStart.y, p.y).toFixed(1);
-    const r = Math.max(zStart.x, p.x).toFixed(1), b = Math.max(zStart.y, p.y).toFixed(1);
-    const w = (r - l).toFixed(1), h = (b - t).toFixed(1);
-    zStart = null;
-    if (zBox) { zBox.remove(); zBox = null; }
-    if (parseFloat(w) < 1 || parseFloat(h) < 1) {
-      hudShow('зона нулевая — ТЯНИ рамку, не кликай');
-      return;
+  // фаза подгонки: 4 угловые ручки, тяни как в фотошопе; ENTER — готово, ESC — отмена
+  let zAdj = null; // { pts: [{x,y}×4], shape, handles[], dragIdx }
+  function renderAdj() {
+    const poly = zAdj.pts.map(q => q.x.toFixed(1) + '% ' + q.y.toFixed(1) + '%').join(', ');
+    zAdj.shape.style.clipPath = 'polygon(' + poly + ')';
+    zAdj.pts.forEach((q, i) => {
+      Object.assign(zAdj.handles[i].style, { left: 'calc(' + q.x + '% - 5px)', top: 'calc(' + q.y + '% - 5px)' });
+    });
+  }
+  function startAdjust(l, t, r, b) {
+    zAdj = { pts: [{x:l,y:t},{x:r,y:t},{x:r,y:b},{x:l,y:b}], dragIdx: -1, handles: [] };
+    zAdj.shape = document.createElement('div');
+    Object.assign(zAdj.shape.style, { position:'absolute', inset:0,
+      background:'rgba(255,215,0,.22)', zIndex:60, pointerEvents:'none' });
+    sc.appendChild(zAdj.shape);
+    for (let i = 0; i < 4; i++) {
+      const hd = document.createElement('div');
+      Object.assign(hd.style, { position:'absolute', width:'10px', height:'10px',
+        background:'#ffd700', border:'1px solid #000', zIndex:61, cursor:'grab' });
+      hd.dataset.idx = i;
+      hd.addEventListener('mousedown', (ev) => {
+        ev.preventDefault(); ev.stopPropagation();
+        zAdj.dragIdx = i;
+      }, true);
+      sc.appendChild(hd);
+      zAdj.handles.push(hd);
     }
+    renderAdj();
+    hudShow('тяни углы по объекту; ENTER — готово, ESC — отмена');
+  }
+  function endAdjust(save) {
+    if (!zAdj) return;
+    const pts = zAdj.pts;
+    zAdj.shape.remove(); zAdj.handles.forEach(h => h.remove());
+    zAdj = null;
+    if (!save) return;
     const name = prompt('Имя зоны (отмена = выбросить):');
     if (!name) return;
+    const xs = pts.map(q => q.x), ys = pts.map(q => q.y);
+    const l = Math.min(...xs).toFixed(1), t = Math.min(...ys).toFixed(1);
+    const w = (Math.max(...xs) - Math.min(...xs)).toFixed(1);
+    const h = (Math.max(...ys) - Math.min(...ys)).toFixed(1);
+    const poly = pts.map(q => q.x.toFixed(1) + '% ' + q.y.toFixed(1) + '%').join(', ');
     const code = "// [" + S.scene + "] " + name + "\n" +
       "glowHot({ left:'" + l + "%', top:'" + t + "%', width:'" + w + "%', height:'" + h + "%' },\n" +
-      "  'polygon(" + l + "% " + t + "%, " + r + "% " + t + "%, " + r + "% " + b + "%, " + l + "% " + b + "%)', '" + name + "', () => {})";
+      "  'polygon(" + poly + ")', '" + name + "', () => {})";
     zCollected.push(code);
     console.log('=== ЗОНА [' + S.scene + '] «' + name + '» ===\n' + code);
     say('', 'Зона «' + name + '» снята (всего: ' + zCollected.length + ').\nF4 — забрать весь пакет разом.', true);
+  }
+  window.addEventListener('keydown', (e) => {
+    if (!zAdj) return;
+    if (e.key === 'Enter') { e.preventDefault(); endAdjust(true); }
+    if (e.key === 'Escape') { e.preventDefault(); endAdjust(false); }
+  });
+  sc.addEventListener('mousemove', (e) => {
+    if (!zAdj || zAdj.dragIdx < 0) return;
+    e.preventDefault(); e.stopPropagation();
+    const p = pct(e);
+    zAdj.pts[zAdj.dragIdx] = { x: p.x, y: p.y };
+    renderAdj();
+  }, true);
+  sc.addEventListener('mouseup', (e) => {
+    if (zAdj) { zAdj.dragIdx = -1; return; }
+    if (!zEdit || !zStart) return;
+    e.preventDefault(); e.stopPropagation();
+    const p = pct(e);
+    const l = Math.min(zStart.x, p.x), t = Math.min(zStart.y, p.y);
+    const r = Math.max(zStart.x, p.x), b = Math.max(zStart.y, p.y);
+    zStart = null;
+    if (zBox) { zBox.remove(); zBox = null; }
+    if ((r - l) < 1 || (b - t) < 1) {
+      hudShow('зона нулевая — ТЯНИ рамку, не кликай');
+      return;
+    }
+    startAdjust(l, t, r, b); // фотошоп-фаза: подгони углы
   }, true);
   // в режиме редактора клики не должны дёргать хотспоты
   sc.addEventListener('click', (e) => {
