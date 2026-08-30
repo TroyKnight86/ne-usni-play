@@ -133,6 +133,13 @@
     background:rgba(255,240,200,.6); z-index:3; animation:bubbleUp 3.2s linear forwards; }
   @keyframes bubbleUp { to { transform:translateY(-46px); opacity:0; } }
 
+  /* F3 — карта зон: показать все зоны сцены с именами (макет как в 1С) */
+  #scene.zdbg .hot-glow, #scene.zdbg .hot {
+    outline:1px solid rgba(255,215,0,.75);
+    background:rgba(255,215,0,.08); }
+  #scene.zdbg .exit { outline:1px solid rgba(120,200,255,.75); }
+  #scene.zdbg .tag { display:block !important; }
+
   /* дымок над кофе: маячок «я интерактивный» (дети не находили кружку) */
   .steam { position:absolute; width:3px; height:3px; border-radius:50%;
     background:rgba(235,228,210,.5); z-index:3;

@@ -198,6 +198,10 @@ window.addEventListener('keydown', (e) => {
     zEdit = !zEdit;
     hudShow(zEdit ? 'редактор зон: ВКЛ — тяни мышью по объекту (F4 — забрать всё)' : 'редактор зон: выкл');
   }
+  if (e.key === 'F3') { // карта зон: все рамки и имена разом (макет как в 1С)
+    const on = document.getElementById('scene').classList.toggle('zdbg');
+    hudShow(on ? 'карта зон: ВКЛ (F3 — скрыть)' : 'карта зон: выкл');
+  }
   if (e.key === 'F4') {
     const old = document.getElementById('zdump');
     if (old) { old.remove(); return; }
