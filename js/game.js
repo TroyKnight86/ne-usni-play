@@ -673,8 +673,9 @@ SCENES.bathroom = { build() {
    ===================================================================== */
 SCENES.corridor = { build() {
   clearScene();
-  setBg('assets/corridor_px.png');
-  glowSetup('assets/corridor_px.png');
+  const cbg = S.time === 'evening' ? 'assets/corridor_night.png' : 'assets/corridor_px.png';
+  setBg(cbg);
+  glowSetup(cbg);
   aquarium(21.5, 47.5, 12.5, 15.5); // рыбы в воде (зона Антона), не в воздухе
 
   glowHot({ left:'2.5%', top:'52.6%', width:'18.6%', height:'25.0%' },
