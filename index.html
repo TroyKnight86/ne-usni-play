@@ -70,6 +70,7 @@
     width:min(1100px, 100vw, calc((100vh - 205px) * 1.8333));
     font-family:'Press Start 2P', 'Courier New', monospace; }
   #panel.talk { cursor:pointer; background:#14141e; }
+  #panel, #panel * { user-select:none; } /* Костя: клик выделял текст — непонятно, что это диалог */
   #speaker { font-size:10px; color:#d8c080; margin-bottom:8px;
     letter-spacing:2px; }
   #text { flex:1; font-size:13px; line-height:1.9; white-space:pre-wrap;
