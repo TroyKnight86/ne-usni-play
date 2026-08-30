@@ -345,8 +345,9 @@ const SCENES = {};
 
 SCENES.bedroom = { build() {
   clearScene();
-  setBg('assets/bedroom_px.png');
-  glowSetup('assets/bedroom_px.png');
+  const bg = S.time === 'evening' ? 'assets/bedroom_night.png' : 'assets/bedroom_px.png';
+  setBg(bg);
+  glowSetup(bg);
 
   // --- интерактив ---
   glowHot({ left:'31.2%', top:'57.1%', width:'36.9%', height:'27.5%' },
@@ -821,8 +822,9 @@ SCENES.corridor = { build() {
    ===================================================================== */
 SCENES.living = { build() {
   clearScene();
-  setBg('assets/living_px.png');
-  glowSetup('assets/living_px.png');
+  const bg = S.time === 'evening' ? 'assets/living_night.png' : 'assets/living_px.png';
+  setBg(bg);
+  glowSetup(bg);
 
   const eq = el('div','eq',{ left:'50.5%', top:'61%', height:'4%', zIndex:3 });
   for (let i = 0; i < 4; i++) el('i','', { height:'20%' }, eq);
@@ -1159,14 +1161,16 @@ SCENES.lunch = { build() {
   clearScene();
   setBg('assets/kitchen_px.png');
   glowSetup('assets/kitchen_px.png');
-  phoneEl = exit({ left:'2%', top:'86%', width:'18%', height:'13%' }, 'телефон — в гостиной', '☎',
+  phoneEl = exit({ left:'2%', top:'86%', width:'22%', height:'13%' }, 'звонит телефон!', '☎',
     () => phoneClickLunch());
+  phoneEl.style.display = 'none'; // появляется только когда есть повод (баг Сашки)
 
   // Вера звонит в обед — всегда (если утром уже поговорили 2 раза — не звонит)
   const veraCallsToday = S.vera.called + S.vera.callback;
   const willRing = veraCallsToday < 2;
   if (willRing) {
     S.flags.lunchRinging = true;
+    phoneEl.style.display = 'flex';
     phoneEl.classList.add('ringing');
     let rings = 0;
     ringTimer = setInterval(() => {
@@ -1179,6 +1183,9 @@ SCENES.lunch = { build() {
           S.flags.lunchMissed = true;
           S.vera.missed++;
           S.log.push('обед: пропустил звонок Веры');
+          // плашка остаётся: «пропущенный» можно глянуть
+          const small = phoneEl.querySelector('small');
+          if (small) small.textContent = 'пропущенный...';
         }
       }
     }, 900);
@@ -1294,8 +1301,9 @@ SCENES.nursery = { build() {
    ===================================================================== */
 SCENES.kitchen = { build() {
   clearScene();
-  setBg('assets/kitchen_px.png');
-  glowSetup('assets/kitchen_px.png');
+  const bg = S.time === 'evening' ? 'assets/kitchen_night.png' : 'assets/kitchen_px.png';
+  setBg(bg);
+  glowSetup(bg);
 
   glowHot({ left:'28.5%', top:'49.9%', width:'18.0%', height:'24.7%' },
     'polygon(28.5% 49.9%, 46.5% 49.9%, 46.5% 74.6%, 28.5% 74.6%)', 'стол', () => {
